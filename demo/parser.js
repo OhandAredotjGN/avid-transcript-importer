@@ -1,7 +1,7 @@
 function onOpen() {
   DocumentApp.getUi()
     .createMenu('Transcript Import')
-    .addItem('Import Client Transcript(s)', 'showTranscriptImporter')
+    .addItem('Import Avid Transcript(s)', 'showTranscriptImporter')
     .addToUi();
 }
 
@@ -11,7 +11,7 @@ function showTranscriptImporter() {
     .setWidth(760)
     .setHeight(680);
 
-  DocumentApp.getUi().showModalDialog(html, 'Import Client Transcript(s)');
+  DocumentApp.getUi().showModalDialog(html, 'Import Avid Transcript(s)');
 }
 
 /**

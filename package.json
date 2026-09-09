@@ -1,5 +1,5 @@
 {
-  "name": "client-transcript-importer",
+  "name": "avid-transcript-importer",
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
@@ -10,5 +10,6 @@
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "description": "Format Avid transcript text exports as client-review documents in Google Docs."
 }
