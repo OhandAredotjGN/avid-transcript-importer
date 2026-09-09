@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 16px 20px;
+      color: #222;
+      font-size: 13px;
+    }
+    h2 { margin: 0 0 4px; font-size: 15px; color: #1f4e79; }
+    .hint { color: #777; margin: 0 0 12px; }
+
+    #dropzone {
+      border: 2px dashed #b9c4cf;
+      border-radius: 8px;
+      padding: 28px 16px;
+      text-align: center;
+      color: #6d7782;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    #dropzone.dragover { background: #eef4fb; border-color: #1f4e79; color: #1f4e79; }
+    #dropzone strong { color: #1f4e79; }
+
+    #fileInput { display: none; }
+
+    #results { margin-top: 12px; }
+    .file-report {
+      border: 1px solid #e0e4e8;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+    }
+    .file-report .name { font-weight: bold; }
+    .status { font-size: 12px; padding: 1px 8px; border-radius: 10px; margin-left: 8px; }
+    .status.ok { background: #e3f2e6; color: #217a36; }
+    .status.warn { background: #fdf3dc; color: #8a6d1a; }
+    .status.problem { background: #fbe3e3; color: #b03030; }
+    .warnings { margin: 6px 0 0; padding-left: 18px; color: #8a6d1a; }
+    .warnings.problem { color: #b03030; }
+    .stats { color: #999; font-size: 11px; margin-top: 4px; }
+
+    fieldset {
+      border: 1px solid #e0e4e8;
+      border-radius: 6px;
+      margin: 14px 0 0;
+      padding: 10px 14px;
+    }
+    legend { font-size: 12px; font-weight: bold; color: #6d7782; padding: 0 6px; }
+    label { display: block; margin: 6px 0; }
+    select { font-family: inherit; font-size: 13px; margin-left: 6px; }
+
+    .buttons { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 18px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background: #f5f5f5;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #1f4e79;
+      border-color: #1f4e79;
+      color: #fff;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #statusMsg { color: #6d7782; }
+    #statusMsg.error { color: #b03030; }
+  </style>
+</head>
+<body>
+  <h2>Import Client Transcript(s)</h2>
+  <p class="hint">Drop .txt transcript files below. Files are checked before anything is written to the document.</p>
+
+  <div id="dropzone">
+    <strong>Drop transcript .txt files here</strong><br>
+    or click to choose files
+  </div>
+  <input type="file" id="fileInput" accept=".txt,text/plain" multiple>
+
+  <div id="results"></div>
+
+  <fieldset>
+    <legend>Import options</legend>
+    <label><input type="checkbox" id="optClear"> Clear the document before importing</label>
+    <label><input type="checkbox" id="optTimestamps"> Show timestamps next to speaker names</label>
+    <label><input type="checkbox" id="optMeta"> Include project / clip / source-file metadata</label>
+    <label><input type="checkbox" id="optLog"> Append an import log page</label>
+    <label>Cleanup level:
+      <select id="optCleanMode">
+        <option value="light">Light — whitespace only</option>
+        <option value="balanced" selected>Balanced — remove markers &amp; filler words</option>
+        <option value="aggressive">Aggressive — also collapse stutters</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <div class="buttons">
+    <button class="primary" id="importBtn" disabled>Import</button>
+    <button id="cancelBtn">Cancel</button>
+    <span id="statusMsg"></span>
+  </div>
+
+  <script>
+    var loadedFiles = [];
+
+    var dropzone = document.getElementById('dropzone');
+    var fileInput = document.getElementById('fileInput');
+    var importBtn = document.getElementById('importBtn');
+    var statusMsg = document.getElementById('statusMsg');
+
+    dropzone.addEventListener('click', function() { fileInput.click(); });
+
+    dropzone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', function() {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', function() {
+      handleFiles(fileInput.files);
+      fileInput.value = '';
+    });
+
+    function handleFiles(fileList) {
+      var files = Array.prototype.slice.call(fileList).filter(function(f) {
+        return /\.txt$/i.test(f.name) || f.type === 'text/plain';
+      });
+
+      if (!files.length) {
+        setStatus('Only .txt files are supported.', true);
+        return;
+      }
+
+      setStatus('Reading ' + files.length + ' file(s)…');
+
+      var pending = files.length;
+      var read = [];
+
+      files.forEach(function(file) {
+        var reader = new FileReader();
+        reader.onload = function() {
+          read.push({ name: file.name, content: reader.result });
+          if (--pending === 0) {
+            loadedFiles = read;
+            runPreflight();
+          }
+        };
+        reader.onerror = function() {
+          if (--pending === 0) {
+            loadedFiles = read;
+            runPreflight();
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    function runPreflight() {
+      setStatus('Checking files…');
+      importBtn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(renderReports)
+        .withFailureHandler(function(err) {
+          setStatus(err.message || 'Preflight failed.', true);
+        })
+        .preflightTranscriptFiles(loadedFiles);
+    }
+
+    function renderReports(reports) {
+      var container = document.getElementById('results');
+      container.innerHTML = '';
+
+      var anyImportable = false;
+
+      reports.forEach(function(report) {
+        var cls = 'ok';
+        if (report.status === 'Problem') cls = 'problem';
+        else if (report.warnings.length) cls = 'warn';
+
+        if (report.status !== 'Problem') anyImportable = true;
+
+        var div = document.createElement('div');
+        div.className = 'file-report';
+
+        var html =
+          '<span class="name"></span>' +
+          '<span class="status ' + cls + '">' + escapeHtml(report.status) + '</span>' +
+          '<div class="stats">' +
+            report.stats.speakerTurns + ' speaker turns · ' +
+            report.stats.timestamps + ' timestamps · ' +
+            report.stats.lines + ' lines' +
+          '</div>';
+
+        if (report.warnings.length) {
+          html += '<ul class="warnings ' + (cls === 'problem' ? 'problem' : '') + '">' +
+            report.warnings.map(function(w) {
+              return '<li>' + escapeHtml(w) + '</li>';
+            }).join('') +
+          '</ul>';
+        }
+
+        div.innerHTML = html;
+        div.querySelector('.name').textContent = report.name;
+        container.appendChild(div);
+      });
+
+      importBtn.disabled = !anyImportable;
+      setStatus(anyImportable ? 'Ready to import.' : 'No importable files.', !anyImportable);
+    }
+
+    importBtn.addEventListener('click', function() {
+      importBtn.disabled = true;
+      setStatus('Importing…');
+
+      var options = {
+        clearDocument: document.getElementById('optClear').checked,
+        showTimestamps: document.getElementById('optTimestamps').checked,
+        includeMeta: document.getElementById('optMeta').checked,
+        includeImportLog: document.getElementById('optLog').checked,
+        cleanMode: document.getElementById('optCleanMode').value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          setStatus(result.message + ' You can close this window.');
+        })
+        .withFailureHandler(function(err) {
+          importBtn.disabled = false;
+          setStatus(err.message || 'Import failed.', true);
+        })
+        .importClientTranscripts(loadedFiles, options);
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+      google.script.host.close();
+    });
+
+    function setStatus(msg, isError) {
+      statusMsg.textContent = msg;
+      statusMsg.className = isError ? 'error' : '';
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

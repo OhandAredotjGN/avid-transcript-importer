@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width"
+  /><title>Transcript Importer · Preview</title
+  ><style>
+    body {
+      background: #f7f3ea;
+      color: #232d33;
+      font: 17px system-ui;
+      max-width: 1100px;
+      margin: 60px auto;
+      padding: 24px;
+    }
+    h1 {
+      font: 56px Georgia;
+      margin: 10px 0;
+    }
+    small {
+      letter-spacing: 3px;
+      color: #5b6c70;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    textarea {
+      box-sizing: border-box;
+      width: 100%;
+      height: 340px;
+      border: 1px solid #c7c8bf;
+      padding: 20px;
+      font: 14px monospace;
+      background: #fffdf8;
+      border-radius: 12px;
+    }
+    button {
+      background: #244e53;
+      color: white;
+      border: 0;
+      padding: 14px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    article {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      min-height: 320px;
+    }
+    p {
+      line-height: 1.6;
+    }
+    h3 {
+      font-size: 14px;
+      color: #416d74;
+      margin-bottom: 0;
+    }
+    @media (max-width: 700px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      h1 {
+        font-size: 38px;
+      }
+    }</style
+  ><small>PRODUCTION TOOLS / BEAU SCHEIER</small>
+  <h1>From transcript to review.</h1>
+  <p>Parse speaker turns and timestamps before importing into Google Docs.</p>
+  <main>
+    <section>
+      <textarea id="input">
+Project: [Fictional Launch]
+Clip Name: [Demo interview]
+
+00:20
+ALEX:
+We wanted the opening to feel like the start of a new day.
+
+00:28
+JAMIE:
+The lighting gives us that feeling before anyone speaks.</textarea
+      >
+      <p><button id="preview">Preview transcript</button></p>
+      <small>LOCAL PREVIEW · NO UPLOADS</small>
+    </section>
+    <article id="output"></article>
+  </main>
+  <script src="parser.js"></script>
+  <script>
+    function preview() {
+      const p = parseTranscript_(document.querySelector("#input").value),
+        out = document.querySelector("#output");
+      out.replaceChildren();
+      for (const b of p.blocks) {
+        const h = document.createElement("h3");
+        h.textContent = b.speaker + " · " + b.timestamp;
+        const t = document.createElement("p");
+        t.textContent = b.text;
+        out.append(h, t);
+      }
+    }
+    document.querySelector("#preview").onclick = preview;
+    preview();
+  </script>
+</html>
