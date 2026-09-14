@@ -92,3 +92,11 @@ The included example is fictional, not a captured production export. Do not comm
 Created by **Beau Scheier**. Product direction and workflow design draw on production practice; development includes AI assistance.
 
 [Production portfolio](https://prod.beauscheier.com/) · [Rights notice](NOTICE.md) · [Runtime attribution and source](THIRD_PARTY_NOTICES.md)
+
+### Sharing, feedback, and analytics
+
+Share opens the OS share sheet when Web Share is available over HTTPS. Otherwise an accessible dialog offers Copy link and Email link. Only the canonical product URL is shared; selected transcripts and filenames are never included. Cancelling native sharing leaves the app unchanged. Clipboard denial selects the URL for manual copying.
+
+Report a bug and Request a feature open public GitHub issue forms (GitHub account required). Use synthetic examples, not private transcripts.
+
+Production uses the existing observe.report Cloudflare Web Analytics configuration. Cloudflare injects its beacon at the edge; CSP allows the beacon and its collection endpoint. Cache-Control intentionally permits this injection. No analytics script is added to local builds. Review metrics in Cloudflare Web Analytics, filtering Host to tools.observe.report and Path to /TranscriptTamer. Metrics include page views, visits, referrers, devices and performance; visits are not an exact count of unique people. No transcript content or filenames are sent by the app. The in-app Privacy dialog discloses analytics and public feedback.

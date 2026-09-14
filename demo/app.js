@@ -160,3 +160,31 @@ exportButton.addEventListener('click', () => {
     worker.postMessage({json:JSON.stringify(model)});
   } catch (error) {cancelExport(); status(error.message, true);}
 });
+
+const shareData = {title:'TranscriptTamer', text:'Avid transcripts. Ready for review.', url:'https://tools.observe.report/TranscriptTamer'};
+$('share').addEventListener('click', async () => {
+  const button = $('share');
+  if (button.disabled) return;
+  button.disabled = true;
+  try {
+    if (typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare(shareData))) {
+      await navigator.share(shareData);
+      return;
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+  } finally {button.disabled = false;}
+  $('share-status').textContent = '';
+  $('share-dialog').showModal();
+});
+$('copy-link').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(shareData.url);
+    $('share-status').textContent = 'Link copied.';
+  } catch {
+    $('share-url').focus(); $('share-url').select();
+    $('share-status').textContent = 'Copy the selected link.';
+  }
+});
+
+$('privacy-details').addEventListener('click', () => $('privacy-dialog').showModal());

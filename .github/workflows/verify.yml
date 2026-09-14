@@ -16,7 +16,7 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
       - run: npm run build
       - run: npm run test:production

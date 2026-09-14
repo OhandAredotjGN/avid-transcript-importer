@@ -7,7 +7,7 @@ test('exact product route, metadata, OG image and compiled exporter work', async
   page.on('pageerror', error => errors.push(error.message));
   const response = await page.goto('/TranscriptTamer');
   expect(response.status()).toBe(200);
-  expect(response.headers()['cache-control']).toContain('no-transform');
+  expect(response.headers()['cache-control']).toContain('must-revalidate');
   await expect(page.getByRole('heading', {name:'TranscriptTamer', exact:true})).toBeVisible();
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', 'https://tools.observe.report/TranscriptTamer');
   const image = await request.get('/TranscriptTamer/assets/transcripttamer-og-v3.png');
