@@ -10,7 +10,7 @@ test('exact product route, metadata, OG image and compiled exporter work', async
   expect(response.headers()['cache-control']).toContain('no-transform');
   await expect(page.getByRole('heading', {name:'TranscriptTamer', exact:true})).toBeVisible();
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', 'https://tools.observe.report/TranscriptTamer');
-  const image = await request.get('/TranscriptTamer/assets/transcripttamer-og-v2.png');
+  const image = await request.get('/TranscriptTamer/assets/transcripttamer-og-v3.png');
   expect(image.status()).toBe(200);
   expect(image.headers()['content-type']).toContain('image/png');
   expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
