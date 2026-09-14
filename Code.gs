@@ -56,6 +56,8 @@ function preflightTranscriptFiles(files) {
       const trimmed = line.trim();
       if (!trimmed) return;
 
+      if (isMetadataLine_(trimmed)) return;
+
       if (isTimestamp_(trimmed)) {
         report.stats.timestamps++;
         timestampCounts[trimmed] = (timestampCounts[trimmed] || 0) + 1;
@@ -281,7 +283,7 @@ function parseTranscript_(raw) {
      * Inline format:
      * RACHEL: Dialogue text here.
      */
-    const inlineSpeaker = trimmed.match(/^([A-Za-z0-9 ._'&()#/\-]{1,80}):\s+(.+)$/);
+    const inlineSpeaker = !isSpeakerLine_(trimmed) && trimmed.match(/^(.{1,80}?):\s+(.+)$/);
     if (inlineSpeaker && looksLikeSpeakerLabel_(inlineSpeaker[1])) {
       if (current) blocks.push(current);
 
@@ -517,14 +519,15 @@ function isTimestamp_(line) {
 }
 
 function isInlineSpeakerLine_(line) {
-  const match = String(line || '').trim().match(/^([A-Za-z0-9 ._'&()#/\-]{1,80}):\s+(.+)$/);
+  if (isMetadataLine_(line) || isSpeakerLine_(line)) return false;
+  const match = String(line || '').trim().match(/^(.{1,80}?):\s+(.+)$/);
   return !!(match && looksLikeSpeakerLabel_(match[1]));
 }
 
 function isSpeakerLine_(line) {
   if (!/:$/.test(line)) return false;
   const label = line.replace(/:$/, '').trim();
-  return looksLikeSpeakerLabel_(label);
+  return label.split(/:\s*&\s*/).every(looksLikeSpeakerLabel_);
 }
 
 function looksLikeSpeakerLabel_(label) {
@@ -535,7 +538,7 @@ function looksLikeSpeakerLabel_(label) {
 
   if (/^SPEAKER\s+\d+$/i.test(label)) return true;
 
-  if (!/^[A-Za-z0-9][A-Za-z0-9 ._'&()#/\-]*$/.test(label)) {
+  if (!/^[\p{L}\p{N}][\p{L}\p{N} ._'&()#/!\-]*$/u.test(label)) {
     return false;
   }
 
@@ -547,7 +550,7 @@ function looksLikeSpeakerLabel_(label) {
   const uppercaseish = label === label.toUpperCase();
 
   const titleish = words.every(function(word) {
-    return /^[A-Z0-9]/.test(word) || /^(of|the|and|in|on|for)$/i.test(word);
+    return /^[\p{Lu}\p{N}]/u.test(word) || /^(of|the|and|in|on|for)$/i.test(word);
   });
 
   return uppercaseish || titleish;
@@ -555,6 +558,7 @@ function looksLikeSpeakerLabel_(label) {
 
 function cleanSpeaker_(speaker) {
   return String(speaker || '')
+    .replace(/:\s*&\s*/g, ' & ')
     .replace(/\s+/g, ' ')
     .trim();
 }

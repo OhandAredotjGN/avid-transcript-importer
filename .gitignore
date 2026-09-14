@@ -24,3 +24,16 @@ coverage/
 playwright-report/
 test-results/
 .runtime/
+# Generated static assets and private test material
+/demo/parser.js
+/demo/composer.js
+/demo/transcript_docx.py
+/demo/review.txt
+/demo/THIRD_PARTY_NOTICES.md
+/demo/vendor/
+/demo/licenses/
+private-fixtures/
+*.docx
+
+.site-dist/
+.wrangler/

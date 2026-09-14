@@ -1,108 +1,61 @@
 <!doctype html>
 <html lang="en">
-  <meta charset="utf-8" /><meta
-    name="viewport"
-    content="width=device-width"
-  /><title>Avid Transcript Importer · Preview</title
-  ><style>
-    body {
-      background: #f7f3ea;
-      color: #232d33;
-      font: 17px system-ui;
-      max-width: 1100px;
-      margin: 60px auto;
-      padding: 24px;
-    }
-    h1 {
-      font: 56px Georgia;
-      margin: 10px 0;
-    }
-    small {
-      letter-spacing: 3px;
-      color: #5b6c70;
-    }
-    main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-    }
-    textarea {
-      box-sizing: border-box;
-      width: 100%;
-      height: 340px;
-      border: 1px solid #c7c8bf;
-      padding: 20px;
-      font: 14px monospace;
-      background: #fffdf8;
-      border-radius: 12px;
-    }
-    button {
-      background: #244e53;
-      color: white;
-      border: 0;
-      padding: 14px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    article {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      min-height: 320px;
-    }
-    p {
-      line-height: 1.6;
-    }
-    h3 {
-      font-size: 14px;
-      color: #416d74;
-      margin-bottom: 0;
-    }
-    @media (max-width: 700px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-      h1 {
-        font-size: 38px;
-      }
-    }</style
-  ><small>PRODUCTION TOOLS / BEAU SCHEIER</small>
-  <h1>From Avid to client review.</h1>
-  <p>Preview speaker turns and timecode ranges from Avid transcript text exports before importing into Google Docs.</p>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Turn Avid transcript exports into editable DOCX review documents. No account, uploads, or Google Docs required.">
+  <link rel="canonical" href="https://tools.observe.report/TranscriptTamer">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Observe &amp; Report Tools">
+  <meta property="og:title" content="TranscriptTamer — Avid transcripts, ready for review">
+  <meta property="og:description" content="Turn Avid text exports into readable, editable DOCX transcripts. Everything stays in your browser.">
+  <meta property="og:url" content="https://tools.observe.report/TranscriptTamer">
+  <meta property="og:image" content="https://tools.observe.report/TranscriptTamer/assets/transcripttamer-og-v1.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1734">
+  <meta property="og:image:height" content="907">
+  <meta property="og:image:alt" content="TranscriptTamer by Observe &amp; Report. Loose transcript strips become an organized review document.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TranscriptTamer — Avid transcripts, ready for review">
+  <meta name="twitter:description" content="Avid text exports to editable DOCX documents. No account or uploads.">
+  <meta name="twitter:image" content="https://tools.observe.report/TranscriptTamer/assets/transcripttamer-og-v1.png">
+  <meta name="twitter:image:alt" content="TranscriptTamer by Observe &amp; Report. Loose transcript strips become an organized review document.">
+  <title>TranscriptTamer — Avid transcripts, ready for review</title>
+  <link rel="icon" href="assets/observe-report-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header><a class="brand" href="https://observe.report"><img src="assets/observe-report-mark.svg" alt="" width="28" height="30"> OBSERVE &amp; REPORT <span>/ TOOLS</span></a><a href="https://github.com/OhandAredotjGN/avid-transcript-importer">GitHub ↗</a></header>
   <main>
-    <section>
-      <textarea id="input">
-Project: [Fictional Launch]
-Clip Name: [Demo interview]
-
-ALEX:
-01:00:20:00 - 01:00:27:12
-We wanted the opening to feel like the start of a new day.
-
-JAMIE:
-01:00:28:00 - 01:00:34:08
-The lighting gives us that feeling before anyone speaks.</textarea
-      >
-      <p><button id="preview">Preview transcript</button></p>
-      <small>LOCAL PREVIEW · NO UPLOADS</small>
-    </section>
-    <article id="output"></article>
+    <section class="intro"><div><p class="eyebrow">AVID TRANSCRIPTS, READY FOR REVIEW</p><h1>TranscriptTamer</h1><p class="lede">Avid text exports. Readable transcripts. Editable Word documents.</p></div><p class="privacy">Processed on your device.<br>No account or uploads.</p></section>
+    <div class="workspace">
+      <aside>
+        <section class="panel" id="dropzone">
+          <div class="section-top"><h2>Transcripts <span id="file-count">0</span></h2><button id="clear" class="text-button" hidden>Clear</button></div>
+          <label class="file-picker">Add .txt files<input id="files" type="file" accept=".txt,text/plain" multiple></label>
+          <button id="sample" class="secondary">Try a sample</button>
+          <div id="file-list"></div>
+        </section>
+        <section class="panel">
+          <h2>Document</h2>
+          <label class="field">File name<input id="filename" value="client-review-transcript" maxlength="100" autocomplete="off"></label>
+          <label class="field">Cleanup<select id="cleanup"><option value="light">Light</option><option value="balanced" selected>Balanced</option><option value="aggressive">Aggressive</option></select></label>
+          <p id="cleanup-note" class="note">Removes filler words and common performance markers.</p>
+          <label class="check"><input id="timestamps" type="checkbox">Show timestamps</label>
+          <label class="check"><input id="metadata" type="checkbox">Include source metadata</label>
+          <label class="check"><input id="log" type="checkbox">Include preflight log</label>
+          <button id="export" class="primary" disabled>Download .docx <span aria-hidden="true">↓</span></button>
+          <button id="cancel-export" class="secondary" hidden>Cancel export</button>
+          <p id="status" role="status" aria-live="polite"></p>
+        </section>
+      </aside>
+      <section class="preview-area" aria-label="Transcript preview">
+        <div class="preview-top"><h2>Preview</h2><span id="turn-count">No transcripts selected</span></div>
+        <div id="preview" class="paper"><div class="empty"><span aria-hidden="true">Aa</span><h3>Your next review starts here.</h3></div></div>
+      </section>
+    </div>
   </main>
-  <script src="parser.js"></script>
-  <script>
-    function preview() {
-      const p = parseTranscript_(document.querySelector("#input").value),
-        out = document.querySelector("#output");
-      out.replaceChildren();
-      for (const b of p.blocks) {
-        const h = document.createElement("h3");
-        h.textContent = b.speaker + " · " + b.timestamp;
-        const t = document.createElement("p");
-        t.textContent = b.text;
-        out.append(h, t);
-      }
-    }
-    document.querySelector("#preview").onclick = preview;
-    preview();
-  </script>
+  <footer><span>DOCX export · US Letter · Arial · <a href="THIRD_PARTY_NOTICES.md">Notices</a></span><a href="https://github.com/OhandAredotjGN/avid-transcript-importer#google-docs-option">Google Docs option ↗</a></footer>
+  <script src="parser.js"></script><script src="composer.js"></script><script src="app.js" type="module"></script>
+</body>
 </html>
