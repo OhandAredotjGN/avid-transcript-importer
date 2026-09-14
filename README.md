@@ -1,57 +1,79 @@
-# Avid Transcript Importer
+# Avid Transcript Composer
 
-**Turn Avid transcript text exports into readable client-review documents in Google Docs.**
+Turn Avid transcript text exports into editable DOCX review documents, directly in your browser. Google Docs remains an optional workflow.
 
-![Application preview using synthetic or procedural content](docs/preview.png)
+![Browser composer with fictional sample content](docs/composer-preview.png)
 
-Avid Transcript Importer prepares transcript `.txt` exports from Avid Media Composer for client review in Google Docs. It checks speaker turns and timecodes before import, then formats them into readable review pages.
+## Browser DOCX export
 
-It addresses a small but recurring production task: turning machine-shaped text into something people can comfortably review.
+Add `.txt` exports, review speaker turns and preflight notes, choose cleanup and metadata options, then download a `.docx`. Multiple transcripts are sorted by filename and start on separate pages in one document.
 
-## What it does
+**Your transcripts stay on your device.** Parsing, preview and DOCX generation run in the browser. No Google account, Word installation, Python installation, upload endpoint or paid conversion service is required. The static site supplies the Python/WebAssembly runtime on the first export (approximately 15 MB of runtime assets before HTTP compression). A network connection is needed to load the app/runtime; this release is not an installable offline app.
 
-- Drag-and-drop transcript files with preflight reporting.
-- Avid-style speaker labels followed by timecode ranges (`HH:MM:SS:FF - HH:MM:SS:FF`).
-- Compatibility with timestamp-before-speaker and inline speaker text layouts.
-- Speaker-turn formatting with optional timestamps.
-- Several cleanup levels.
-- An independent browser preview using the same parser.
+Features:
 
-## Run it
+- Multiple files, optional timestamps, project/clip/source metadata and a preflight log.
+- Light, balanced and aggressive cleanup, with preview using the same prepared text as the export.
+- Arial speaker turns, 1.15 dialogue spacing, US Letter pages with one-inch margins.
+- Explicit errors for unreadable/empty files, cancellation and download failure recovery.
+- Up to 50 files, 10 MB of input and 5 million text characters per batch. The preview shows up to 300 turns; the DOCX includes the full batch.
 
-For a local preview, install Node.js 22+ and Python 3:
+Use Light when filler words and performance markers should remain. All modes normalize whitespace, smart quotes and dashes. Balanced removes selected filler words and markers; Aggressive additionally removes selected stutters. Cleanup is heuristic: inspect the result, especially numbers, URLs and unusual speaker labels. The preview shows document content and styling, not exact word-processor pagination.
 
-~~~sh
+## Run locally
+
+Development/build requires Node.js 22+ and Python 3.9+ (use a supported Python release for ongoing development):
+
+```sh
+npm ci
 npm test
 npm run demo
-~~~
+```
 
-Open **http://localhost:8790**. This preview parses text locally; it does not upload files or write a Google Doc.
+The preview server listens on port 8790. Use the host address reachable from your browser. To host elsewhere, run `npm run build:demo` and serve the contents of `demo/` as static files over HTTP or HTTPS, including `vendor/`, `licenses/` and the exporter. Opening the HTML directly from disk is not supported.
 
-To use the actual importer:
+Maintainers can enable GitHub Pages with **GitHub Actions** as the source and run the **Publish browser app** workflow from `main` after merging. The workflow builds and tests the app before uploading the static artifact; runtime binaries are not committed to Git.
 
-1. Create a new Google Doc.
-2. Open **Extensions → Apps Script**.
-3. Paste `Code.gs` into the script editor and add `ImporterDialog.html` as an HTML file named `ImporterDialog`.
-4. Save, reload the Doc, and choose **Transcript Import → Import Avid Transcript(s)**.
-5. Authorize document access when Google requests it, then try `examples/review.txt` in the new document.
+## Google Docs option
 
-The manifest is provided in `appsscript.json`. No script IDs, account configuration, or client transcripts are included.
+1. Create a Google Doc and open **Extensions → Apps Script**.
+2. Paste `Code.gs` into the script editor and add `ImporterDialog.html` as an HTML file named `ImporterDialog`.
+3. Save, reload the Doc, and choose **Transcript Import → Import Avid Transcript(s)**.
+4. Authorize document access and try `examples/review.txt`.
 
-## How it works
+This path retains the original active-document import workflow. Downloaded DOCX files do not reproduce Google Docs sharing or comments.
 
-The parser and document writer are in `Code.gs`. `ImporterDialog.html` provides the Google Docs dialog. The local demo copies the same source into a browser-compatible script. Node VM tests exercise parsing and preflight without Google service access.
+## Source and testing
 
-## Scope and limitations
+- `Code.gs`: shared parser/preflight/cleanup plus the Google Docs adapter.
+- `core/composer.js`: ordered transcript JSON used by browser preview and export.
+- `exporter/transcript_docx.py`: importable `render_docx(model) -> bytes`, using only Python's standard library. Adapted from Beau Scheier's custom OOXML/ZIP document pipeline, with transcript-specific layout and proportional spacing.
+- `demo/`: browser UI and module Web Worker. Pyodide executes the same Python exporter; it is not an Electron runtime and does not spawn native Python.
+- `scripts/build-demo.cjs`: copies parser, composition core, exporter and pinned Pyodide runtime into the static build.
+- `tests/`: synthetic parser/composition, Python document structure and real browser-download tests.
 
-This tool works with exported transcript text; it does not open Avid bins or projects, import AAF media, or perform speech-to-text transcription. The fictional example illustrates a supported Avid-style text layout; it is not an export captured from a live Avid session.
+```sh
+npm test
+npx playwright install chromium
+npm run test:browser
+```
 
-The parser is heuristic: review speaker labels and cleanup results. Automated checks cover parsing and preflight; they do not replace a final Google Docs integration check. The browser preview demonstrates parsing and is not the document writer.
+Browser tests use a dedicated local test server and exercise actual WebAssembly Python generation, downloaded DOCX contents, invalid-file handling, a narrow viewport and export errors. A separate local validation of a production transcript batch passed the Microsoft Open XML SDK validator; those private files and generated documents are not included. Word/LibreOffice visual pagination and non-Chromium browser compatibility still need release testing.
 
-## About the work
+The exporter also runs under native Python with prepared JSON:
 
-Created by **Beau Scheier**, a commercial producer building tools for production, creative work, and coordinating development. Product direction and workflow design draw on that production practice; development includes AI assistance. This repository is a standalone portfolio edition.
+```sh
+python3 exporter/transcript_docx.py prepared-transcripts.json review.docx
+```
 
-[Production portfolio](https://prod.beauscheier.com/) · [More tools](https://github.com/OhandAredotjGN)
+The output must be a new filename. The JSON contract is version 1: `documents` contain `title`, `sourceFile`, `project`, `clipName`, and `blocks` with `speaker`, `timestamp`, `text`; `options` selects timestamps, metadata and import log. Optional per-document `report` data supplies the log. Text is already cleaned before generation. See the synthetic fixture in `tests/test_docx.py`.
 
-See [NOTICE.md](NOTICE.md) for rights and dependency attribution.
+## Scope
+
+Supports Avid-style speaker labels and timecode ranges (`HH:MM:SS:FF - HH:MM:SS:FF`), timestamp-before-speaker and inline-speaker layouts. It does not open Avid bins/projects, import AAF media, transcribe speech, or implement an excerpt/timeline editor. Timecodes are recognized syntactically; frame-rate validity is not checked. A separate Electron desktop package is a future step.
+
+The included example is fictional, not a captured production export. Do not commit client transcripts or generated client documents.
+
+Created by **Beau Scheier**. Product direction and workflow design draw on production practice; development includes AI assistance.
+
+[Production portfolio](https://prod.beauscheier.com/) · [Rights notice](NOTICE.md) · [Runtime attribution and source](THIRD_PARTY_NOTICES.md)
