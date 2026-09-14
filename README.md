@@ -64,7 +64,7 @@ This path retains the original active-document import workflow. Downloaded DOCX 
 - `scripts/build-demo.cjs`: prepares the readable development preview.
 - `scripts/build-production.cjs`: creates the minified/compiled production build and nests it under `/TranscriptTamer`.
 - `deploy/worker.mjs`: exact-path routing, redirects, security headers and static delivery.
-- `demo/assets/transcripttamer-og-v1.png`: social share image; generation prompt is in `docs/og-image-provenance.md`.
+- `demo/assets/transcripttamer-og-v2.png`: social share image; generation prompt is in `docs/og-image-provenance.md`.
 - `tests/`: synthetic parser/composition, Python document structure and real browser-download tests.
 
 ```sh

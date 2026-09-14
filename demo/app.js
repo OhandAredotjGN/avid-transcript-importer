@@ -52,7 +52,10 @@ function render() {
   renderFiles(); preview.replaceChildren(); status('');
   if (!files.length) {
     const empty = node('div', 'empty');
-    empty.append(node('span', '', 'Aa'), node('h3', '', 'Your next review starts here.'));
+    const mascot = node('img', 'mascot');
+    mascot.src = 'assets/transcripttamer-mascot.png'; mascot.alt = '';
+    mascot.width = 128; mascot.height = 128;
+    empty.append(mascot, node('h3', '', 'Your next review starts here.'));
     preview.append(empty); $('turn-count').textContent = 'No transcripts selected'; return;
   }
   try {
