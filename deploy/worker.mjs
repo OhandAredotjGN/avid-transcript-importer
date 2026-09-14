@@ -1,6 +1,6 @@
 // Routing and security headers only. Transcript processing never reaches this Worker.
 const BASE = '/TranscriptTamer';
-const CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'";
+const CSP = "default-src 'self'; script-src 'self' https://static.cloudflareinsights.com 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://cloudflareinsights.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'";
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -16,9 +16,9 @@ export default {
     response.headers.set('Content-Security-Policy', CSP);
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), web-share=(self)');
     response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('Cache-Control', 'public, no-transform, max-age=0, must-revalidate');
+    response.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
     return response;
   }
 };

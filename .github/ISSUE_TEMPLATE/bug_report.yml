@@ -1,0 +1,26 @@
+name: Report a bug
+description: Something went wrong in TranscriptTamer.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Reports are public and require a GitHub account. Do not include private transcript content. Use a synthetic example if needed."
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include what you expected and the steps to reproduce it.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Device and browser
+      placeholder: iPhone, iOS 18, Safari
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Synthetic example or screenshot
+      description: Remove names and confidential content before attaching anything.
