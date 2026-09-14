@@ -34,3 +34,6 @@ test-results/
 /demo/licenses/
 private-fixtures/
 *.docx
+
+.site-dist/
+.wrangler/
